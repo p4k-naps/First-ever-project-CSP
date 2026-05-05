@@ -1,0 +1,193 @@
+var Damages = getColumn("Weapons", "Weapon Damage");
+var Prices = getColumn("Weapons", "Weapon Cost");
+var Class = getColumn("Weapons", "Weapon Classification");
+var Durabilities = getColumn("Weapons", "Weapon Durability");
+var images = getColumn("Weapons", "images");
+var FinalDamage = 0;
+var FinalClass = 0;
+var FinalDurabilities = 0;
+var index = 0;
+var Gold = 50;
+var Clicks = 0;
+var totalScores = 0;
+var FinalIndex = 0;
+var GoblinHP = getColumn("Goblins", "Health");
+var GoblinName = getColumn("Goblins", "Name");
+var GoblinWeakness = "";
+var FinalGoblinHP = 0;
+var spawnedGoblin = [];
+var i = 0;
+var ready = false;
+updateStore(0);
+
+//beginning
+onEvent("button1", "click", function( ) {
+  setScreen("StoreScene");
+});
+
+//store
+
+onEvent("NextLoop", "click", function( ) {
+
+  if(index < Damages.length-1) {
+    index = index + 1;
+  } 
+  updateStore(index);
+});
+
+onEvent("BackLoop", "click", function( ) {
+  if(index > 0) {
+    index = index - 1;
+  }
+  updateStore(index); 
+});
+onEvent("button4", "click", function( ) {
+  if (Gold >= Prices[index]){
+    FinalDamage = Damages[index];
+    FinalClass = Class[index];
+    FinalDurabilities = Durabilities[index];
+    Gold = Gold - Prices[index];
+    FinalIndex = index;
+    
+    setScreen("battleScene");
+    updateBattleScene();
+    displaysWeaponStats();
+  }else { 
+    setProperty("button4","text", "too Poor!");
+    updateStore(index);
+  }
+});
+// battle
+
+onEvent("button2", "click", function( ) {
+  setProperty("text_area12", "y", 1000);
+  setProperty("text_area12", "x", 1000);
+  setProperty("button2", "y", 1000);
+  setProperty("button2", "x", 1000);
+  spawnGoblin();
+  getGoblinStats();
+  displaysGoblinStats();
+});
+
+onEvent("button3", "click", function( ) {
+  setProperty("button3","text", "Slay!");
+  if (ready == true){
+    setPosition("Weaponimag", 205, 250);
+    setTimeout(function() {
+      setPosition("Weaponimag", 70, 340); 
+    }, 100);
+    Clicks = Clicks + 1;
+    LoseHealth();
+      if (FinalGoblinHP <= 0) {
+       Gold = Gold + 20;
+        i++; 
+        getGoblinStats(); 
+        spawnGoblin(); 
+        displaysGoblinStats(); 
+    }
+    displaysGoblinStats();
+    goblinCheck();
+    spawnGoblin();
+    FinalDurabilities = FinalDurabilities - 4;
+    Gold = Gold +8;
+    displaysWeaponStats();
+    if(FinalDurabilities <= 0){
+      totalScores = Clicks * 5;
+      setProperty("text_area4", "text", totalScores);
+      setScreen("ScoreScene");
+      
+    }
+  }
+  
+  ready = true;
+  if(spawnedGoblin == "You Win"&&FinalGoblinHP == 0){
+  setScreen("WinScreen");
+  } 
+});
+onEvent( "homeButton", "click", function() {
+  setScreen( "StoreScene");
+  updateStore(index);
+});
+
+if (setScreen("StoreScene") == true && Gold <= 40){
+  setScreen("LoseScreen");
+}
+
+function spawnGoblin() {
+  spawnedGoblin = GoblinName[i]; 
+  if (spawnedGoblin == "BasicGoblin") {
+    GoblinWeakness = "Melee";
+    setText("goblinWeakness", GoblinWeakness);
+    setText("GoblinName", "Basic Goblin");
+    setImageURL("Goblin", "goblisnbasic.png");
+  } else if (spawnedGoblin == "BomberGoblin") {
+    GoblinWeakness = "Ranged";
+    setText("goblinWeakness", GoblinWeakness);
+    setText("GoblinName", "Bomber Goblin");
+    setImageURL("Goblin", "goldbeinbomber.png");
+  } else if (spawnedGoblin == "Goblin Patrol") {
+    GoblinWeakness = "Magic";
+    setText("goblinWeakness", GoblinWeakness);
+    setText("GoblinName", "Patrol Goblins");
+    setImageURL("Goblin", "goblinpatrool.png");
+  } else if (spawnedGoblin == "Boss Goblin") {
+    GoblinWeakness = "None";
+    setText("goblinWeakness", GoblinWeakness);
+    setText("GoblinName", "Boss Goblin");
+    setImageURL("Goblin", "goblinboss.png");
+  }
+  
+}
+
+function goblinCheck (){
+  if (FinalGoblinHP <= 0 && i < GoblinHP.length - 1) {
+    i++;
+  }
+  return i;
+}
+function updateBattleScene() {
+  setImageURL("Hero", "hero.png");
+  setImageURL("Weaponimag", images[FinalIndex]);
+  
+}
+
+  function updateStore(index) {
+  setText("DamageLabel", Damages[index]);
+  setImageURL("image3", images[index]);
+  setText("PricLabel", Prices[index]);
+  setText("DurabilityLabel", Durabilities[index]);
+  setText("ClassLabel", Class[index]);
+  setText("GoldLabel", Gold);
+}
+
+function displaysWeaponStats() {
+  setText("WeaponDurabilityLabel", FinalDurabilities);
+  setText("WeaponClassLabel", FinalClass);
+}
+
+function getGoblinStats() {
+  FinalGoblinHP = GoblinHP[i];
+}
+
+function displaysGoblinStats() {
+  setText("goblinhealth", FinalGoblinHP);
+  
+}
+
+function LoseHealth() {
+ 
+  if (FinalClass == GoblinWeakness) {
+    FinalGoblinHP = FinalGoblinHP - (FinalDamage * 2);
+    setText("button3", "CRITICAL HIT!"); 
+  } else if (GoblinWeakness == "None") {
+    FinalGoblinHP = FinalGoblinHP - FinalDamage;
+  } else {
+    FinalGoblinHP = FinalGoblinHP - FinalDamage;
+  }
+}
+
+
+
+
+
+
